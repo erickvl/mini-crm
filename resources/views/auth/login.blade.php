@@ -8,7 +8,7 @@
                 <div class="card-header">{{ __('Login') }}</div>
 
                 <div class="card-body">
-                    <form method="POST" action="{{ route('login') }}">
+                    <form method="POST" data-url="{{ request()->segment(count(request()->segments())) }}" action="{{ request()->segment(count(request()->segments())) == 'employee' ? route('login.employee') : route('login') }}">
                         @csrf
 
                         <div class="form-group row">

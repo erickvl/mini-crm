@@ -17,10 +17,26 @@
       <div class="card">
         <div class="card-header">
           {{-- <h3 class="card-title">DataTable with minimal features & hover style</h3> --}}
-          <a href="{{ route('employees.add') }}" class="edit btn btn-primary btn-sm float-right">Add New</a>
+          @if ( Auth::guard('web')->check() )
+            <div class="form-group float-left">
+              <select class="form-control select2" id="export_company_id" style="width: 100%;">
+                  <option selected value="">Select Company</option>
+                  @foreach ($companies as $company)
+                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                  @endforeach
+              </select>
+            </div>
+
+            <a href="{{ route('admin.employees.add') }}" class="edit btn btn-primary btn-sm float-right">Add New</a>
+            <a href="{{ route('admin.employees.import') }}" class="edit btn btn-primary btn-sm float-right mr-2" id="export-csv">Import</a>
+            <a href="{{ route('admin.employees.export') .'/csv' }}" class="edit btn btn-success btn-sm float-right mr-2" id="export-csv">Export CSV</a>
+            <a href="{{ route('admin.employees.export') .'/xlsx' }}" class="edit btn btn-success btn-sm float-right mr-2" id="export-xlsx">Export XLSX</a>
+          @else
+            <a href="{{ route('employees.edit', Auth::guard('employee')->id()) }}" class="edit btn btn-primary btn-sm float-right">Edit Profile</a>
+          @endif
         </div>
       <!-- /.card-header -->
-        <div class="card-body">
+        <div class="card-body" id="transaction_wrapper">
           <table class="table table-bordered data-table">
             <thead>
               <tr>
@@ -54,7 +70,7 @@
             var table = $('.data-table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('employees') }}",
+                ajax: "{{ Auth::guard('web')->check() ? route('admin.employees') : route('employees') }}",
                 columns: [
                     {data: 'DT_RowIndex', name: 'DT_RowIndex'},
                     {data: 'full_name', name: 'full_name'},
@@ -65,13 +81,23 @@
                 ]
             });
 
+            $(this).on('change', '#export_company_id', function() {
+              var companyId = $(this).val();
+
+              // var csvLink = $("#export-csv").attr('href');
+              // var xlxsLink = $("#export-xlxs").attr('href');
+              
+              $("#export-csv").attr('href', '{{ Auth::guard("web")->check() ? route("admin.employees.export") : "" }}/csv/' + companyId);
+              $("#export-xlsx").attr('href', '{{ Auth::guard("web")->check() ? route("admin.employees.export") : "" }}/xlsx/' + companyId);
+
+            });
+
             var message = "{{ session('success') ? session('success') : '' }}";
             if ( message == 'Deleted Successfully' ) {
               $('.toastrDefaultSuccess').click();
             } else if ( message == 'Error' ) {
               $('.toastrDefaultError').click();
-            }
-            
+            }            
         });
     </script>
 @endsection

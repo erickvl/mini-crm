@@ -20,12 +20,16 @@
                         {{ Session::get('message') }}
                     </div>
                 @endif
-
-                <form id="companyForm" role="form" action="{{ $action == 'add' ? route('employees.save') : route('employees.update') }}" method="POST">
+                
+                @if ( Auth::guard('web')->check() )
+                    <form id="employeeForm" role="form" action="{{ $action == 'add' ? route('admin.employees.save') : route('admin.employees.update') }}" method="POST">
+                @else
+                    <form id="employeeForm" role="form" action="{{ route('employees.update') }}" method="POST">
+                @endif
                     {{ csrf_field() }}
                     <div class="card-body">
                         @if ( $employee )
-                            <input type="text" name="id" class="form-control" id="employeeId" value="{{ $employee->id }}">
+                            <input type="hidden" readonly name="id" class="form-control" id="employeeId" value="{{ $employee->id }}">
                         @endif
 
                         <div class="form-group">
@@ -42,17 +46,21 @@
                         </div>
                         <div class="form-group">
                             <label for="employeePassword">Password</label>
-                            <input type="password" name="password" class="form-control" id="employeePassword" value="{{ $employee ? $employee->password :  old('password') }}" placeholder="Enter Password" required>
+                            <input type="password" name="password" class="form-control" id="employeePassword" placeholder="Enter Password" required>
                         </div>
                         <div class="form-group">
                             <label for="employeePhone">Phone</label>
-                            <input type="tel" name="phone" class="form-control" id="employeePhone" value="{{ $employee ? $employee->phone :  old('phone') }}" placeholder="Enter Phone" required>
+                            <input type="tel" name="phone" class="form-control" id="employeePhone" value="{{ $employee ? $employee->phone :  old('phone') }}" placeholder="Enter Phone">
                         </div>
                         <div class="form-group">
                             <label>Company</label>
-                            <select class="form-control select2" name="company" style="width: 100%;">
+                            <select class="form-control select2" name="company_id" style="width: 100%;">
                                 @foreach ($companies as $company)
-                                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                    @if ( $employee )
+                                        <option {{ $company->id == $employee->company->id ? 'selected' : '' }} value="{{ $company->id }}">{{ $company->name }}</option>
+                                    @else
+                                        <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                    @endif
                                 @endforeach
                             </select>
                           </div>

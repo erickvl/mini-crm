@@ -17,7 +17,9 @@
       <div class="card">
         <div class="card-header">
           {{-- <h3 class="card-title">DataTable with minimal features & hover style</h3> --}}
-          <a href="{{ route('companies.add') }}" class="edit btn btn-primary btn-sm float-right">Add New</a>
+          @if (Auth::guard('web')->check())
+            <a href="{{ route('admin.companies.add') }}" class="edit btn btn-primary btn-sm float-right">Add New</a>
+          @endif
         </div>
       <!-- /.card-header -->
         <div class="card-body">
@@ -53,7 +55,7 @@
             var table = $('.data-table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('companies') }}",
+                ajax: "{{ Auth::guard('web')->check() ? route('admin.companies') : route('companies') }}",
                 columns: [
                     {data: 'DT_RowIndex', name: 'DT_RowIndex'},
                     {data: 'name', name: 'name'},

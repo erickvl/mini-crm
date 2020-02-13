@@ -1,3 +1,5 @@
+
+{{-- {{ dd(Auth::guard('employee')->id() ) }} --}}
 <!DOCTYPE html>
 <html>
 <head>
@@ -34,15 +36,25 @@
 
   <!-- jQuery Datatables CSS -->
   <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="//cdn.datatables.net/buttons/1.5.2/css/buttons.dataTables.min.css">
 
   {{-- Select2 --}}
 
   <link rel="stylesheet" href="{{ asset('vendor/adminlte/plugins/select2/css/select2.min.css') }}">
 
+  {{-- Datepicker --}}
+  <link rel="stylesheet" href="{{ asset('vendor/adminlte/plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css') }}">
+
   <style>
     .select2-container .select2-selection--single,
     .select2-container--default .select2-selection--single .select2-selection__arrow {
       height: 42px;
+    }
+
+    table td,
+    table th {
+      vertical-align: middle !important;
+      text-align: center;
     }
   </style>
 </head>
@@ -56,25 +68,7 @@
       <li class="nav-item">
         <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
       </li>
-      <li class="nav-item d-none d-sm-inline-block">
-        <a href="index3.html" class="nav-link">Home</a>
-      </li>
-      <li class="nav-item d-none d-sm-inline-block">
-        <a href="#" class="nav-link">Contact</a>
-      </li>
     </ul>
-
-    <!-- SEARCH FORM -->
-    <form class="form-inline ml-3">
-      <div class="input-group input-group-sm">
-        <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
-        <div class="input-group-append">
-          <button class="btn btn-navbar" type="submit">
-            <i class="fas fa-search"></i>
-          </button>
-        </div>
-      </div>
-    </form>
 
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
@@ -178,7 +172,7 @@
     <a href="index3.html" class="brand-link">
       <img src="{{ asset('vendor/adminlte/dist/img/AdminLTELogo.png')}}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
            style="opacity: .8">
-      <span class="brand-text font-weight-light">AdminLTE 3</span>
+      <span class="brand-text font-weight-light">Mini CRM</span>
     </a>
 
     <!-- Sidebar -->
@@ -189,7 +183,17 @@
           <img src="{{ asset('vendor/adminlte/dist/img/user2-160x160.jpg')}}" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
-          <a href="#" class="d-block">{{ Auth::user()->id ? Auth::user()->name : 'test' }}</a>
+          @if ( Auth::guard('web')->check() )
+            @php
+                $fullName = Auth::user()->name
+            @endphp
+          @else
+              @php
+                  $emp = App\Employee::find( Auth::guard('employee')->id() );
+                  $fullName = $emp->first_name . ' ' . $emp->last_name
+              @endphp
+          @endif
+          <a href="#" class="d-block">{{  $fullName }}</a>
         </div>
       </div>
 
@@ -295,12 +299,19 @@
 
 <!-- jQuery Datatables -->
 <script src="//cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script src="//cdn.datatables.net/buttons/1.5.2/js/dataTables.buttons.min.js"></script>
+{{-- <script src="//cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="//cdn.datatables.net/buttons/1.3.1/js/buttons.html5.min.js"></script>
+<script src="//cdn.datatables.net/buttons/1.2.1/js/buttons.print.min.js"></script> --}}
 
 <script src="{{ asset('vendor/adminlte/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 <script src="{{ asset('vendor/adminlte/plugins/toastr/toastr.min.js') }}"></script>
 
 {{-- Select2 --}}
 <script src="{{ asset('vendor/adminlte/plugins/select2/js/select2.full.min.js') }}"></script>
+
+{{-- Datepicker --}}
+<script src="{{ asset('vendor/adminlte/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js') }}"></script>
 
 
 <script type="text/javascript">

@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Company;
+use App\Email;
+use App\Employee;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Datatables;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class CompanyController extends Controller
 {
@@ -19,19 +23,20 @@ class CompanyController extends Controller
 
         if ($request->ajax()) {
             $data = Company::latest()->get();
-            // $btn .= '<a href="'.route('companies.delete', $row->id).'" class="edit btn btn-danger btn-sm mr-1"><i class="far fa-trash-alt"></i></a>';
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($row){
 
-                        $btn = '<a href="'.route("companies.view", $row->id).'" class="edit btn btn-primary btn-sm mr-1"><i class="far fa-eye"></i></a>';
-                        if ( Auth::user()->id ) {
-                            $btn .= '<a href="'.route('companies.edit', $row->id).'" class="edit btn btn-primary btn-sm mr-1"><i class="far fa-edit"></i></a>';
-                            $btn .= '<form style="display: inline-block;" method="POST" action="'.route('companies.delete', $row->id).'">';
+                        if ( Auth::guard('web')->check() ) {
+                            $btn = '<a href="'.route("admin.companies.view", $row->id).'" class="edit btn btn-primary btn-sm mr-1"><i class="far fa-eye"></i></a>';
+                            $btn .= '<a href="'.route('admin.companies.edit', $row->id).'" class="edit btn btn-primary btn-sm mr-1"><i class="far fa-edit"></i></a>';
+                            $btn .= '<form style="display: inline-block;" method="POST" action="'.route('admin.companies.delete', $row->id).'">';
                             $btn .= csrf_field();
                             $btn .= method_field('DELETE');
                             $btn .= '<button type="submit" class="edit btn btn-danger btn-sm mr-1"><i class="far fa-trash-alt"></i></button>';
                             $btn .= '</form>';
+                        } else {
+                            $btn = '<a href="'.route("companies.view", $row->id).'" class="edit btn btn-primary btn-sm mr-1"><i class="far fa-eye"></i></a>';    
                         }
 
                         return $btn;
@@ -71,18 +76,61 @@ class CompanyController extends Controller
     {
         $request->validate([
             'name' => 'required|unique:companies|max:255',
-            'email' => 'required|unique:companies|max:255',
-            'website' => 'required',
-            'logo' => 'required'
+            'email' => 'unique:companies|max:255',
+            'logo' => 'image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
-        $company = Company::create($request->all());
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'website' => $request->website,
+            'logo' => $request->hasFile('logo') ? $this->saveImage($request->logo) : 'https://image.shutterstock.com/image-vector/abstract-green-swirl-logo-sample-260nw-413126230.jpg',
+        ];
 
-        return back()->with([
-            'title' => 'Add Company',
-            'action' => 'add',
-            'message' => 'Added Successfully'
-        ]);
+        $company = Company::create($data);
+
+        if ( $company ) {
+
+            if ( Auth::guard('web')->check() ) {
+                $senderName = Auth::user()->name;
+                $senderFrom = Auth::user()->email;
+            } else {
+                $employee = Employee::find( Auth::guard('employee')->id() );
+                $senderName = $employee->first_name . ' ' . $employee->last_name;
+                $senderFrom = $employee->email;
+            }
+
+            $data = [
+                'sender' => $senderName,
+                'sender_from' => $senderFrom,
+                'receiver' => $request->email,
+                'subject' => 'Company Added', 
+                'message' =>  'The company successfully added to the listing.',
+                'delivered' => true,
+                'email_date' => Carbon::now()->format('Y-m-d'),
+            ];
+
+            Email::create([
+                'sender' => $senderName,
+                'receiver' => $request->email,
+                'subject' => 'Company Added',
+                'delivered' => true,
+                'message' =>  'The company successfully added to the listing.',
+                'email_date' => Carbon::now()->format('Y-m-d'),
+            ]);
+
+            Mail::send('email.reminder', ['data' => $data], function ($m) use ($data) {
+                $m->from( $data['sender_from'], 'MINI_CRM');
+    
+                $m->to($data['receiver'], '')->subject($data['subject']);
+            });
+
+            return back()->with([
+                'title' => 'Add Company',
+                'action' => 'add',
+                'message' => 'Added Successfully'
+            ]);
+        }
     }
 
     /**
@@ -111,17 +159,12 @@ class CompanyController extends Controller
      */
     public function edit(Company $company, $id)
     {
-        //
-        $data = [
-            'title' => 'Edit Company',
-            'action' => 'edit'
-        ];
-
         $company = Company::findOrFail($id);
 
         return view('company.form')
             ->with([
-                'data' => $data,
+                'title' => 'Edit Company',
+                'action' => 'edit',
                 'company' => $company
             ]);
     }
@@ -147,7 +190,7 @@ class CompanyController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'website' => $request->website ? $request->website : $company->website,
-            'logo' => $request->logo ? $request->logo : $company->logo
+            'logo' => $request->hasFile('logo') ? $this->saveImage($request->logo) : $company->logo
         ]);
 
         return back()->with('message', 'Updated Successfully');
@@ -166,5 +209,14 @@ class CompanyController extends Controller
         if ( $company->delete() ) {
             return back()->with( 'success', 'Deleted Successfully');
         }
+    }
+
+    protected function saveImage($image) 
+    {
+        $fileName = rand(1, 999) . $image->getClientOriginalName();
+
+        $image->move(public_path('/images'), $fileName);
+
+        return $fileName;
     }
 }

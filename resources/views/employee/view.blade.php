@@ -9,7 +9,7 @@
                 
                 <h4><strong>{{ $employee->first_name . ' ' . $employee->last_name }}</strong></h4>
 
-                <p><a href="{{ route("companies") .'/'.$employee->company->id}}">{{ $employee->company->name }}</a></p>
+                <p><a href="{{ Auth::guard('web')->check() ? route("admin.companies") .'/'.$employee->company->id : route("companies") .'/'.$employee->company->id }}">{{ $employee->company->name }}</a></p>
 
                 <p><a href="mailto:{{ $employee->email }}">{{ $employee->email }}</a></p>
 
