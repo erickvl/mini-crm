@@ -10,9 +10,6 @@ use Illuminate\Http\Request;
 use Datatables;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 
 class EmployeeController extends Controller
@@ -182,7 +179,7 @@ class EmployeeController extends Controller
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
-            'password' => $request->password,
+            'password' => Hash::make($request->password),
             'phone' => $request->phone ? $request->phone : $employee->phone,
             'company_id' => $request->company_id,
         ]);

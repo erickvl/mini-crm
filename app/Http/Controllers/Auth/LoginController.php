@@ -29,7 +29,15 @@ class LoginController extends Controller
      * @var string
      */
     // protected $redirectTo = RouteServiceProvider::HOME;
-    protected $redirectTo = '/dashboard';
+    // protected $redirectTo = '/dashboard';
+    public function redirectTo()
+    {
+        if ( Auth::guard('web')->check() ) {
+            return '/admin/dasboard';
+        } else {
+            return '/dashboard';
+        }
+    }
 
     /**
      * Create a new controller instance.
@@ -39,25 +47,10 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
-        // $this->middleware('guest:employee')->except('logout');
     }
-
-    // protected function attemptLogin(Request $request)
-    // {
-    //     $userAttempt = Auth::guard('web')->attempt(
-    //         $this->credentials($request), $request->has('remember')
-    //     );
-    //     if(!$userAttempt){
-    //         return Auth::guard('employee')->attempt(
-    //             $this->credentials($request), $request->has('remember')
-    //         );
-    //     }
-    //     return $userAttempt;
-    // }
 
     public function showEmployeeLogin()
     {
-        // return view('auth.login', ['url' => 'employee']);
         return view('auth.login', ['url' => 'employee']);
     }
 
@@ -74,18 +67,4 @@ class LoginController extends Controller
 
         return back()->withInput( $request->only('email') );
     }
-
-    // public function login(Request $request)
-    // {
-    //     $this->validate($request, [
-    //         'email'   => 'required|email',
-    //         'password' => 'required|min:6'
-    //     ]);
-
-    //     if (Auth::guard('employee')->attempt(['email' => $request->email, 'password' => $request->password], $request->get('remember'))) {
-
-    //         return redirect()->intended('/employees');
-    //     }
-    //     return back()->withInput($request->only('email', 'remember'));
-    // }
 }

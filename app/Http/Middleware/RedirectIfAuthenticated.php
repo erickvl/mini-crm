@@ -19,7 +19,7 @@ class RedirectIfAuthenticated
     public function handle($request, Closure $next, $guard = null)
     {
 
-        // dd($guard);
+        // dd(Auth::guard("web")->check());
         if ($guard == "employee" && Auth::guard($guard)->check()) {
             return redirect('/dashboard');
         }

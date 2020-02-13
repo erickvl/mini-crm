@@ -1,0 +1,1 @@
+For smtp I used https://mailtrap.io/
